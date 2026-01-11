@@ -36,5 +36,4 @@ sudo apt install clang-format-21
 requires: gcc, g++, clang, clang++ and cppcheck
 
 ## LICENSE
-This software is licensed under the
-[MIT License](https://opensource.org/licenses/MIT).
+This software is licensed under the [GPLv3](https://www.gnu.org/licenses/gpl-3.0.html).
