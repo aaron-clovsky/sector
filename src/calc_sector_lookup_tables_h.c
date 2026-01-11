@@ -3,16 +3,16 @@
  * Copyright (C) 2026 Aaron Clovsky
  * Based on CRDDAO
  *
- * This program is free software: you can redistribute it and/or modify  
- * it under the terms of the GNU General Public License as published by  
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, version 3.
  *
- * This program is distributed in the hope that it will be useful, but 
- * WITHOUT ANY WARRANTY; without even the implied warranty of 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU 
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License 
+ * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  ******************************************************************************/
 
@@ -31,12 +31,15 @@ uint16_t SECTOR_COEFF_TABLE[43][256];
 /*******************************************************************************
 CRC Table calculation
 *******************************************************************************/
-/* Return width bits of value in reverse order */
-uint32_t reverse_binary(uint32_t value, uint32_t width)
+/* Return 'width' bits in reverse order, up to 32 bits */
+uint32_t reverse_binary(uint32_t value, unsigned width)
 {
-    uint32_t i, reverse;
+    uint32_t reverse;
+    unsigned i;
 
-    for (i = 0, reverse = 0; i < width; i++)
+    reverse = 0;
+
+    for (i = 0; i < width; i++)
     {
         reverse <<= 1;
         if (value & 1) reverse |= 1;
@@ -49,12 +52,12 @@ uint32_t reverse_binary(uint32_t value, uint32_t width)
 /* Compute CRC lookup table */
 void calc_crc_table()
 {
-    uint32_t data;
-    uint32_t i;
+    unsigned i;
 
     for (i = 0; i < 256; i++)
     {
-        uint32_t k;
+        uint32_t data;
+        unsigned k;
 
         data = reverse_binary(i, 8) << 24;
 
@@ -76,12 +79,14 @@ Coefficient Table calculation
 void calc_log_table(uint8_t (*log_table)[2][256])
 {
     uint32_t b;
-    uint32_t i;
+    unsigned i;
+
+    b = 1;
 
     (*log_table)[0][255] = (uint8_t)0;
     (*log_table)[1][255] = (uint8_t)0;
 
-    for (i = 0, b = 1; i < 255; i++)
+    for (i = 0; i < 255; i++)
     {
         (*log_table)[0][b] = (uint8_t)i;
         (*log_table)[1][i] = (uint8_t)b;
@@ -112,7 +117,7 @@ void calc_coeff_table()
 {
     uint8_t  coeffs[2][45];
     uint8_t  log_table[2][256];
-    uint32_t i;
+    unsigned i;
 
     calc_log_table(&log_table);
 
@@ -132,7 +137,7 @@ void calc_coeff_table()
     for (i = 0; i < 43; i++)
     {
         uint16_t c;
-        uint32_t k;
+        unsigned k;
 
         SECTOR_COEFF_TABLE[i][0] = 0;
 
@@ -204,14 +209,14 @@ int main()
         {
             printf("        0x%04X, 0x%04X, 0x%04X, 0x%04X, "
                    "0x%04X, 0x%04X, 0x%04X, 0x%04X%s\n",
-                   SECTOR_COEFF_TABLE[i][k * 4 + 0],
-                   SECTOR_COEFF_TABLE[i][k * 4 + 1],
-                   SECTOR_COEFF_TABLE[i][k * 4 + 2],
-                   SECTOR_COEFF_TABLE[i][k * 4 + 3],
-                   SECTOR_COEFF_TABLE[i][k * 4 + 4],
-                   SECTOR_COEFF_TABLE[i][k * 4 + 5],
-                   SECTOR_COEFF_TABLE[i][k * 4 + 6],
-                   SECTOR_COEFF_TABLE[i][k * 4 + 7],
+                   SECTOR_COEFF_TABLE[i][k * 8 + 0],
+                   SECTOR_COEFF_TABLE[i][k * 8 + 1],
+                   SECTOR_COEFF_TABLE[i][k * 8 + 2],
+                   SECTOR_COEFF_TABLE[i][k * 8 + 3],
+                   SECTOR_COEFF_TABLE[i][k * 8 + 4],
+                   SECTOR_COEFF_TABLE[i][k * 8 + 5],
+                   SECTOR_COEFF_TABLE[i][k * 8 + 6],
+                   SECTOR_COEFF_TABLE[i][k * 8 + 7],
                    (k != 31) ? "," : "");
         }
 

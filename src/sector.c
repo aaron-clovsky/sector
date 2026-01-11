@@ -3,16 +3,16 @@
  * Copyright (C) 2026 Aaron Clovsky
  * Based on CRDDAO
  *
- * This program is free software: you can redistribute it and/or modify  
- * it under the terms of the GNU General Public License as published by  
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, version 3.
  *
- * This program is distributed in the hope that it will be useful, but 
- * WITHOUT ANY WARRANTY; without even the implied warranty of 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU 
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License 
+ * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  ******************************************************************************/
 
@@ -27,22 +27,22 @@ Headers
 Internal functions
 *******************************************************************************/
 /* Calculate the P parities for the sector */
-static void calc_p_parity(const void * sector, uint8_t * p_parity)
+static void calc_p_parity(const uint8_t * sector, uint8_t * p_parity)
 {
-    uint32_t i;
+    unsigned i;
 
     for (i = 0; i < 43; i++)
     {
         uint16_t        lsb;
         uint16_t        msb;
-        uint32_t        dbl_i;
         const uint8_t * p;
-        uint32_t        k;
+        unsigned        dbl_i;
+        unsigned        k;
 
         lsb   = 0;
         msb   = 0;
         dbl_i = i << 1;
-        p     = (const uint8_t *)sector + dbl_i + 12;
+        p     = &sector[dbl_i + 12];
 
         for (k = 19; k < 43; k++)
         {
@@ -60,29 +60,29 @@ static void calc_p_parity(const void * sector, uint8_t * p_parity)
 }
 
 /* Calculate the Q parities for the sector */
-static void calc_q_parity(const void * sector, uint8_t * q_parity)
+static void calc_q_parity(const uint8_t * sector, uint8_t * q_parity)
 {
-    uint32_t i;
+    unsigned i;
 
     for (i = 0; i < 26; i++)
     {
         uint16_t        lsb;
         uint16_t        msb;
-        uint32_t        dbl_i;
         const uint8_t * q;
-        uint32_t        k;
+        unsigned        dbl_i;
+        unsigned        k;
 
         lsb   = 0;
         msb   = 0;
         dbl_i = i << 1;
-        q     = (const uint8_t *)sector + (i * 86) + 12;
+        q     = &sector[(i * 86) + 12];
 
         for (k = 0; k < 43; k++)
         {
             lsb ^= SECTOR_COEFF_TABLE[k][q[0]];
             msb ^= SECTOR_COEFF_TABLE[k][q[1]];
 
-            q += (q >= (const uint8_t *)sector + 2160) ? -2148 : 88;
+            q += (q >= &sector[2160]) ? -2148 : 88;
         }
 
         q_parity[dbl_i + 0]  = (uint8_t)(lsb >> 8);
@@ -237,22 +237,24 @@ uint32_t sector_calc_edc(const void * sector, sector_mode mode)
 */
 void sector_calc_ecc(const void * sector, sector_mode mode, uint8_t * ecc)
 {
-    char copy[2352];
-
-    memcpy(&copy[0], sector, 2352);
+    uint8_t copy[2352];
 
     if (mode == SECTOR_MODE_1)
     {
+        memcpy(&copy[0], sector, 2352);
         *(uint32_t *)&copy[2068] = 0;
         *(uint32_t *)&copy[2072] = 0;
         calc_p_parity(&copy[0], &ecc[0]);
         calc_q_parity(&copy[0], &ecc[172]);
+        memcpy(ecc, &copy[2076], 276);
     }
     else if (mode == SECTOR_MODE_2_FORM_1)
     {
+        memcpy(&copy[0], sector, 2352);
         *(uint32_t *)&copy[12] = 0;
-        calc_p_parity(&copy[0], &ecc[0]);
-        calc_q_parity(&copy[0], &ecc[172]);
+        calc_p_parity(&copy[0], &copy[2076]);
+        calc_q_parity(&copy[0], &copy[2248]);
+        memcpy(ecc, &copy[2076], 276);
     }
 }
 
